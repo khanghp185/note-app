@@ -115,6 +115,7 @@ const Store = {
                 owner: currentUser,
                 title: noteData.title || '',
                 content: noteData.content || '',
+                image: noteData.image || null,
                 color: noteData.color || '#ffffff',
                 tags: noteData.tags || [],
                 isPinned: noteData.isPinned || false,

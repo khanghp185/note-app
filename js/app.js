@@ -52,6 +52,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const pinModalBtn = document.getElementById('pin-modal-btn');
     const colorDots = document.querySelectorAll('.color-dot');
     
+    // Elements for images
+    const noteImageInput = document.getElementById('note-image-input');
+    const attachImageBtn = document.getElementById('attach-image-btn');
+    const imagePreviewContainer = document.getElementById('image-preview-container');
+    const imagePreview = document.getElementById('image-preview');
+    const removeImageBtn = document.getElementById('remove-image-btn');
+    let currentAttachedImage = null;
+
     const inputNoteId = document.getElementById('note-id-input');
     const inputNoteTitle = document.getElementById('note-title-input');
     const inputNoteContent = document.getElementById('note-content-input');
@@ -247,9 +255,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Gắn icon pin ở góc
                 const pinIndicator = (note.isPinned && currentFilter !== 'trash') ? `<div class="icon-pin-indicator"><i class="fa-solid fa-thumbtack"></i></div>` : '';
 
+                // Image HTML
+                const imageHTML = note.image ? `<img src="${note.image}" class="note-card-image" alt="Note Image">` : '';
+
                 // Bố cục HTML ghi chú
                 card.innerHTML = `
                     ${pinIndicator}
+                    ${imageHTML}
                     <div class="note-card-header">
                         <div class="note-title">${note.title ? note.title : '<em>(Không có tiêu đề)</em>'}</div>
                     </div>
@@ -362,6 +374,16 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedColor = note.color;
             noteUpdatedTime.textContent = "Cập nhật lần cuối: " + formatDate(note.updatedAt);
             
+            // Render Image
+            if (note.image) {
+                currentAttachedImage = note.image;
+                imagePreview.src = note.image;
+                imagePreviewContainer.classList.remove('hidden');
+            } else {
+                currentAttachedImage = null;
+                imagePreviewContainer.classList.add('hidden');
+            }
+            
             // Icon Pin 
             const isPinned = note.isPinned;
             pinModalBtn.innerHTML = isPinned ? '<i class="fa-solid fa-thumbtack"></i> Bỏ ghim' : '<i class="fa-solid fa-thumbtack"></i> Ghim';
@@ -379,6 +401,11 @@ document.addEventListener('DOMContentLoaded', () => {
             inputNoteContent.value = '';
             selectedColor = '#ffffff'; // Mặc định trắng
             noteUpdatedTime.textContent = '';
+            
+            // Empty image state
+            currentAttachedImage = null;
+            imagePreviewContainer.classList.add('hidden');
+            noteImageInput.value = '';
             
             pinModalBtn.innerHTML = '<i class="fa-solid fa-thumbtack"></i> Ghim';
             pinModalBtn.style.color = '';
@@ -436,14 +463,65 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // ================= Image Handler =================
+    attachImageBtn.addEventListener('click', () => {
+        if (currentFilter === 'trash') return;
+        noteImageInput.click();
+    });
+
+    removeImageBtn.addEventListener('click', () => {
+        if (currentFilter === 'trash') return;
+        currentAttachedImage = null;
+        imagePreviewContainer.classList.add('hidden');
+        noteImageInput.value = '';
+    });
+
+    noteImageInput.addEventListener('change', (e) => {
+        if (currentFilter === 'trash') return;
+        
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const img = new Image();
+            img.onload = function() {
+                // Resize logic using Canvas
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 800; // auto-compress width
+                let width = img.width;
+                let height = img.height;
+
+                if (width > MAX_WIDTH) {
+                    height *= MAX_WIDTH / width;
+                    width = MAX_WIDTH;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Compression quality 0.70
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                
+                currentAttachedImage = dataUrl;
+                imagePreview.src = dataUrl;
+                imagePreviewContainer.classList.remove('hidden');
+            }
+            img.src = event.target.result;
+        }
+        reader.readAsDataURL(file);
+    });
+
     // Nút Lưu Ghi chú
     saveNoteBtn.addEventListener('click', () => {
         const titleText = inputNoteTitle.value.trim();
         const contentText = inputNoteContent.value.trim();
         const idVal = inputNoteId.value;
 
-        if (!contentText && !titleText) {
-            alert("Nội dung không được để trống!");
+        if (!contentText && !titleText && !currentAttachedImage) {
+            alert("Ghi chú trống! Yêu cầu chữ hoặc ảnh.");
             return;
         }
 
@@ -454,7 +532,8 @@ document.addEventListener('DOMContentLoaded', () => {
             title: titleText,
             content: contentText,
             color: selectedColor,
-            isPinned: isPinnedVal
+            isPinned: isPinnedVal,
+            image: currentAttachedImage
         });
 
         tempPinStatus = false; // Reset temporary setting

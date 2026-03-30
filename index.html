@@ -109,6 +109,17 @@
                 <input type="text" id="note-title-input" class="editor-title" placeholder="Tiêu đề (không bắt buộc)">
                 <textarea id="note-content-input" class="editor-content" placeholder="Bắt đầu nhập nội dung ghi chú..." required></textarea>
                 
+                <!-- Khu vực đính kèm ảnh -->
+                <div class="image-attachment-container">
+                    <input type="file" id="note-image-input" accept="image/*" class="hidden">
+                    <button type="button" id="attach-image-btn" class="btn btn-image"><i class="fa-solid fa-image"></i> Đính kèm ảnh</button>
+                    
+                    <div id="image-preview-container" class="image-preview-container hidden">
+                        <img id="image-preview" src="" alt="Preview">
+                        <button type="button" id="remove-image-btn" class="icon-btn remove-img-btn" title="Xóa ảnh"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>
+                
                 <div class="color-picker-container">
                     <span>Màu sắc: </span>
                     <div class="color-options" id="color-options">
