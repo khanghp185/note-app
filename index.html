@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-User Note App</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Styles CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    
+    <!-- MÀN HÌNH XÁC THỰC (Đăng nhập / Đăng ký) -->
+    <div id="auth-view" class="view-container">
+        <div class="auth-box">
+            <h2 id="auth-title">Đăng Nhập</h2>
+            <form id="auth-form">
+                <div class="input-group">
+                    <i class="fa-solid fa-user"></i>
+                    <input type="text" id="username" placeholder="Tên đăng nhập" required autocomplete="username">
+                </div>
+                <div class="input-group">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="password" placeholder="Mật khẩu" required autocomplete="current-password">
+                </div>
+                <p id="auth-error" class="error-msg"></p>
+                <button type="submit" id="auth-btn" class="btn btn-primary">Đăng Nhập</button>
+            </form>
+            <p class="auth-switch">
+                <span id="auth-switch-text">Chưa có tài khoản?</span> 
+                <a href="#" id="auth-switch-link">Đăng ký ngay</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- MÀN HÌNH DASHBOARD (Giao diện chính) -->
+    <div id="dashboard-view" class="view-container hidden">
+        
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h3><i class="fa-solid fa-book"></i> Notes App</h3>
+                <button id="close-sidebar-btn" class="mobile-only icon-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="user-info">
+                <div class="avatar"><i class="fa-solid fa-user-astronaut"></i></div>
+                <div class="user-details">
+                    <span class="welcome-text">Xin chào,</span>
+                    <strong id="current-username-display">User</strong>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-filter="all"><i class="fa-solid fa-note-sticky"></i> Tất cả Ghi chú</a>
+                <a href="#" class="nav-item" data-filter="pinned"><i class="fa-solid fa-thumbtack"></i> Đã ghim</a>
+                <a href="#" class="nav-item" data-filter="trash"><i class="fa-solid fa-trash"></i> Thùng rác</a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button id="logout-btn" class="btn btn-danger btn-full"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button>
+            </div>
+        </aside>
+
+        <!-- Main Content (Danh sách ghi chú) -->
+        <main class="main-content">
+            <header class="main-header">
+                <button id="menu-toggle-btn" class="mobile-only icon-btn"><i class="fa-solid fa-bars"></i></button>
+                <div class="search-bar">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="search-input" placeholder="Tìm kiếm ghi chú nhanh...">
+                </div>
+            </header>
+
+            <div class="content-body">
+                <div class="content-header">
+                    <h2 id="current-filter-title">Tất cả Ghi chú</h2>
+                    <button id="new-note-btn" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Tạo ghi chú</button>
+                </div>
+                
+                <div id="notes-grid" class="notes-grid">
+                    <!-- Các ghi chú sẽ được render bằng JS vào đây -->
+                </div>
+                
+                <div id="empty-state" class="empty-state hidden">
+                    <i class="fa-regular fa-folder-open"></i>
+                    <p>Không có ghi chú nào ở đây.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL SOẠN THẢO GHI CHÚ (Editor Pop-up) -->
+    <div id="note-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title-text">Tạo ghi chú mới</h3>
+                <div class="modal-actions">
+                    <button id="pin-modal-btn" class="icon-btn" title="Ghim lên đẩu"><i class="fa-solid fa-thumbtack"></i></button>
+                    <button id="close-modal-btn" class="icon-btn" title="Đóng"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+            
+            <div class="modal-body">
+                <input type="hidden" id="note-id-input">
+                <input type="text" id="note-title-input" class="editor-title" placeholder="Tiêu đề (không bắt buộc)">
+                <textarea id="note-content-input" class="editor-content" placeholder="Bắt đầu nhập nội dung ghi chú..." required></textarea>
+                
+                <div class="color-picker-container">
+                    <span>Màu sắc: </span>
+                    <div class="color-options" id="color-options">
+                        <div class="color-dot selected" data-color="#ffffff" style="background-color: #ffffff; border: 1px solid #ccc;"></div>
+                        <div class="color-dot" data-color="#f28b82" style="background-color: #f28b82;"></div> <!-- Đỏ nhạt -->
+                        <div class="color-dot" data-color="#fbbc04" style="background-color: #fbbc04;"></div> <!-- Vàng -->
+                        <div class="color-dot" data-color="#fff475" style="background-color: #fff475;"></div> <!-- Vàng nhạt -->
+                        <div class="color-dot" data-color="#ccff90" style="background-color: #ccff90;"></div> <!-- Xanh lá -->
+                        <div class="color-dot" data-color="#a7ffeb" style="background-color: #a7ffeb;"></div> <!-- Xanh ngọc -->
+                        <div class="color-dot" data-color="#fdcfe8" style="background-color: #fdcfe8;"></div> <!-- Hồng -->
+                        <div class="color-dot" data-color="#d7aefb" style="background-color: #d7aefb;"></div> <!-- Tím -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <span id="note-updated-time" class="timestamp"></span>
+                <button id="save-note-btn" class="btn btn-primary">Lưu ghi chú</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cảnh báo góc (Toast/Snow) -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Scripts JS -->
+    <script src="js/store.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
